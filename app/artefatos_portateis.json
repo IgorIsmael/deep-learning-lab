@@ -1,0 +1,22 @@
+{
+  "format": "california-housing-portable-v1",
+  "description": "Fallback textual e educacional para o deploy da demonstracao",
+  "feature_names": [
+    "MedInc", "HouseAge", "AveRooms", "AveBedrms",
+    "Population", "AveOccup", "Latitude", "Longitude"
+  ],
+  "model": {
+    "type": "linear-regression",
+    "weights": [0.8296, 0.1187, -0.2655, 0.3057, -0.0045, -0.0393, -0.8998, -0.8705],
+    "bias": 2.0686
+  },
+  "scaler": {
+    "type": "standard-scaler",
+    "feature_names_in": [
+      "MedInc", "HouseAge", "AveRooms", "AveBedrms",
+      "Population", "AveOccup", "Latitude", "Longitude"
+    ],
+    "mean": [3.8707, 28.6395, 5.429, 1.0967, 1425.4767, 3.0707, 35.6319, -119.5697],
+    "scale": [1.8998, 12.5853, 2.4742, 0.4739, 1132.4347, 10.3861, 2.1359, 2.0035]
+  }
+}
