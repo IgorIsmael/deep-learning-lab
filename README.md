@@ -38,6 +38,11 @@ deep-learning-python/
 ├── 05_treinamento_numpy.ipynb
 ├── 06_primeira_rede_tensorflow.ipynb
 ├── 07_projeto_01_previsao_precos.ipynb
+├── app/
+│   ├── app.py
+│   ├── melhor_modelo_california_housing.keras
+│   └── standard_scaler_california_housing.pkl
+├── requirements.txt
 └── README.md
 ```
 
@@ -460,6 +465,56 @@ Inicie o Jupyter:
 ```bash
 jupyter notebook
 ```
+
+## Aplicação web com Streamlit
+
+A interface em `app/app.py` usa os oito campos na mesma ordem do Notebook 07:
+`MedInc`, `HouseAge`, `AveRooms`, `AveBedrms`, `Population`, `AveOccup`,
+`Latitude` e `Longitude`. Antes da inferência, ela aplica o
+`StandardScaler` treinado e converte a saída do modelo, expressa em centenas
+de milhares de dólares, para uma estimativa em dólares.
+
+### Preparar os artefatos
+
+Execute o Notebook 07 até a seção **Salvando o modelo e o scaler**. Depois,
+copie os dois artefatos gerados para a pasta da aplicação:
+
+```bash
+cp artefatos_projeto_01/melhor_modelo_california_housing.keras app/
+cp artefatos_projeto_01/standard_scaler_california_housing.pkl app/
+```
+
+Os nomes precisam ser mantidos, pois a aplicação valida a presença dos
+arquivos e a ordem das features do scaler ao iniciar.
+
+### Executar localmente
+
+Recomenda-se Python 3.11 ou 3.12. Na raiz do repositório, execute:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+streamlit run app/app.py
+```
+
+No Windows PowerShell, ative o ambiente com
+`.venv\Scripts\Activate.ps1`. O Streamlit abrirá a aplicação em
+`http://localhost:8501`.
+
+### Publicar no Streamlit Community Cloud
+
+1. Envie este repositório, incluindo os dois artefatos, para o GitHub.
+2. Entre em [share.streamlit.io](https://share.streamlit.io/) com sua conta do GitHub.
+3. Selecione **Create app** e escolha o repositório e a branch desejados.
+4. Em **Main file path**, informe `app/app.py`.
+5. Em **Advanced settings**, selecione Python 3.12 e clique em **Deploy**.
+
+O `requirements.txt` na raiz será detectado automaticamente. Os artefatos não
+contêm segredos e devem fazer parte do commit usado no deploy. Caso um deles
+esteja ausente ou incompatível, a interface exibirá uma mensagem de erro em vez
+de tentar fazer uma previsão incorreta.
 
 ---
 
