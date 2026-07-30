@@ -1,28 +1,16 @@
 """Interface Streamlit para inferência do projeto California Housing."""
 
-from __future__ import annotations
-
-import json
-import os
 from pathlib import Path
 
-# O backend NumPy permite inferência com modelos Keras sem instalar o pacote
-# TensorFlow, que ainda não distribui wheels para todas as versões de Python
-# oferecidas pelo Streamlit Community Cloud. Esta variável deve ser definida
-# antes de importar o Keras.
-os.environ.setdefault("KERAS_BACKEND", "numpy")
-
 import joblib
-import keras
-import numpy as np
 import pandas as pd
 import streamlit as st
+import tensorflow as tf
 
 
 APP_DIR = Path(__file__).resolve().parent
 MODEL_PATH = APP_DIR / "melhor_modelo_california_housing.keras"
 SCALER_PATH = APP_DIR / "standard_scaler_california_housing.pkl"
-PORTABLE_PATH = APP_DIR / "artefatos_portateis.json"
 FEATURES = [
     "MedInc",
     "HouseAge",
@@ -46,60 +34,16 @@ FIELDS = {
 }
 
 
-class PortableScaler:
-    """Aplica os parâmetros de um StandardScaler exportados no artefato leve."""
-
-    def __init__(self, artifact: dict):
-        self.feature_names_in_ = np.asarray(artifact["feature_names_in"])
-        self.n_features_in_ = len(self.feature_names_in_)
-        self.mean_ = np.asarray(artifact["mean"], dtype=float)
-        self.scale_ = np.asarray(artifact["scale"], dtype=float)
-
-    def transform(self, values):
-        return (np.asarray(values, dtype=float) - self.mean_) / self.scale_
-
-
-class PortableLinearModel:
-    """Fallback de inferência incluído para o deploy funcionar imediatamente."""
-
-    def __init__(self, artifact: dict):
-        self.weights = np.asarray(artifact["weights"], dtype=float)
-        self.bias = float(artifact["bias"])
-
-    def predict(self, values, verbose=0):
-        del verbose
-        return np.asarray(values, dtype=float) @ self.weights[:, None] + self.bias
-
-
-def load_portable_artifacts(path: Path):
-    """Carrega o fallback textual, que pode ser revisado normalmente em PRs."""
-    artifact = json.loads(path.read_text(encoding="utf-8"))
-    if artifact.get("format") != "california-housing-portable-v1":
-        raise ValueError("Formato dos artefatos portáteis não reconhecido.")
-    if artifact.get("feature_names") != FEATURES:
-        raise ValueError("As features dos artefatos portáteis não correspondem ao projeto.")
-    return PortableLinearModel(artifact["model"]), PortableScaler(artifact["scaler"])
-
-
 @st.cache_resource(show_spinner="Carregando modelo...")
 def load_artifacts():
     """Carrega uma única vez o modelo e o scaler produzidos pelo Notebook 07."""
-    model_exists = MODEL_PATH.is_file()
-    scaler_exists = SCALER_PATH.is_file()
-
-    if not model_exists and not scaler_exists:
-        if not PORTABLE_PATH.is_file():
-            raise FileNotFoundError(
-                "Nem os artefatos do Notebook 07 nem o fallback textual foram encontrados."
-            )
-        return load_portable_artifacts(PORTABLE_PATH)
-
-    if model_exists != scaler_exists:
+    missing = [path.name for path in (MODEL_PATH, SCALER_PATH) if not path.is_file()]
+    if missing:
         raise FileNotFoundError(
-            "O modelo e o scaler do Notebook 07 devem ser adicionados juntos."
+            "Artefato(s) não encontrado(s): " + ", ".join(missing)
         )
 
-    model = keras.models.load_model(MODEL_PATH, compile=False)
+    model = tf.keras.models.load_model(MODEL_PATH, compile=False)
     scaler = joblib.load(SCALER_PATH)
 
     scaler_features = list(getattr(scaler, "feature_names_in_", FEATURES))
@@ -127,7 +71,7 @@ def main():
     st.title("🏡 Previsão de valores — California Housing")
     st.write(
         "Informe as características de um distrito da Califórnia para obter a "
-        "estimativa de valor mediano produzida pelo modelo preditivo."
+        "estimativa de valor mediano produzida pela rede neural."
     )
 
     try:
