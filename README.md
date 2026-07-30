@@ -529,6 +529,9 @@ No Windows PowerShell, ative o ambiente com
 O `requirements.txt` na raiz será detectado automaticamente e não instala o
 runtime completo do TensorFlow: modelos sequenciais com camadas densas, como o
 deste projeto, podem ser carregados para inferência pelo backend NumPy do Keras.
+O JAX está declarado explicitamente porque o Keras utiliza algumas de suas
+operações internas mesmo nesse backend. O Keras só é importado quando os dois
+artefatos binários reais estão presentes; o fallback JSON não depende dele.
 Os artefatos não
 contêm segredos e devem fazer parte do commit usado no deploy. Caso um deles
 esteja ausente ou incompatível, a interface exibirá uma mensagem de erro em vez

@@ -13,7 +13,6 @@ from pathlib import Path
 os.environ.setdefault("KERAS_BACKEND", "numpy")
 
 import joblib
-import keras
 import numpy as np
 import pandas as pd
 import streamlit as st
@@ -98,6 +97,11 @@ def load_artifacts():
         raise FileNotFoundError(
             "O modelo e o scaler do Notebook 07 devem ser adicionados juntos."
         )
+
+    # Importa o Keras apenas quando os binários reais serão utilizados. Assim,
+    # o fallback textual continua disponível mesmo em um runtime sem backend de
+    # Deep Learning instalado ou durante uma falha opcional desse backend.
+    import keras
 
     model = keras.models.load_model(MODEL_PATH, compile=False)
     scaler = joblib.load(SCALER_PATH)
