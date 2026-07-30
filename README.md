@@ -38,6 +38,10 @@ deep-learning-python/
 ├── 05_treinamento_numpy.ipynb
 ├── 06_primeira_rede_tensorflow.ipynb
 ├── 07_projeto_01_previsao_precos.ipynb
+├── app/
+│   ├── app.py
+│   └── artefatos_portateis.json
+├── requirements.txt
 └── README.md
 ```
 
@@ -460,6 +464,75 @@ Inicie o Jupyter:
 ```bash
 jupyter notebook
 ```
+
+## Aplicação web com Streamlit
+
+A interface em `app/app.py` usa os oito campos na mesma ordem do Notebook 07:
+`MedInc`, `HouseAge`, `AveRooms`, `AveBedrms`, `Population`, `AveOccup`,
+`Latitude` e `Longitude`. Antes da inferência, ela aplica o
+`StandardScaler` treinado e converte a saída do modelo, expressa em centenas
+de milhares de dólares, para uma estimativa em dólares.
+
+### Preparar os artefatos
+
+A pasta `app/` já inclui `artefatos_portateis.json`, um fallback textual para
+que o deploy abra e gere estimativas mesmo antes de executar o notebook. O
+fallback utiliza os parâmetros de padronização do California Housing e uma
+regressão linear educacional; ele não representa a rede neural treinada no
+Notebook 07. Por ser JSON, pode ser revisado e incluído em pull requests sem
+limitações de arquivos binários.
+
+Para publicar a rede neural do projeto, execute o Notebook 07 até a seção
+**Salvando o modelo e o scaler**. Depois, substitua os dois artefatos da pasta
+da aplicação pelos arquivos gerados:
+
+```bash
+cp artefatos_projeto_01/melhor_modelo_california_housing.keras app/
+cp artefatos_projeto_01/standard_scaler_california_housing.pkl app/
+```
+
+Os dois nomes precisam ser mantidos e os binários devem ser adicionados
+diretamente ao repositório fora deste PR (ou armazenados com Git LFS). Quando
+ambos estão presentes, a aplicação prioriza o modelo Keras e o `StandardScaler`
+reais; quando estão ausentes, utiliza o JSON portátil. Nos dois casos, a ordem
+das features é validada ao iniciar.
+
+### Executar localmente
+
+O projeto solicita Python 3.12 por meio de `.python-version`. A aplicação usa
+o backend NumPy do Keras somente para inferência, portanto não depende da
+disponibilidade de um pacote TensorFlow compatível com a versão de Python do
+servidor. Na raiz do repositório, execute:
+
+```bash
+python -m venv .venv
+source .venv/bin/activate
+python -m pip install --upgrade pip
+pip install -r requirements.txt
+streamlit run app/app.py
+```
+
+No Windows PowerShell, ative o ambiente com
+`.venv\Scripts\Activate.ps1`. O Streamlit abrirá a aplicação em
+`http://localhost:8501`.
+
+### Publicar no Streamlit Community Cloud
+
+1. Envie este repositório, incluindo os dois artefatos, para o GitHub.
+2. Entre em [share.streamlit.io](https://share.streamlit.io/) com sua conta do GitHub.
+3. Selecione **Create app** e escolha o repositório e a branch desejados.
+4. Em **Main file path**, informe `app/app.py`.
+5. Em **Advanced settings**, selecione Python 3.12 e clique em **Deploy**. Se a
+   aplicação existente foi criada com outra versão, exclua-a e crie o deploy
+   novamente para que a mudança de runtime seja aplicada.
+
+O `requirements.txt` na raiz será detectado automaticamente e não instala o
+runtime completo do TensorFlow: modelos sequenciais com camadas densas, como o
+deste projeto, podem ser carregados para inferência pelo backend NumPy do Keras.
+Os artefatos não
+contêm segredos e devem fazer parte do commit usado no deploy. Caso um deles
+esteja ausente ou incompatível, a interface exibirá uma mensagem de erro em vez
+de tentar fazer uma previsão incorreta.
 
 ---
 
